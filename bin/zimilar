@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+require 'similar_text'
+
+
+history=`history`.split("\n")
+puts history
