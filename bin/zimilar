@@ -1,6 +1,97 @@
 #!/usr/bin/env ruby
 require 'similar_text'
 
+config = {
+  :zsh => '.zsh_history',
+  :bash => '.bash_history'
+}
 
-history=`history`.split("\n")
-puts history
+shell = ENV['SHELL'].split("/")[-1].to_sym  # auto detect shell
+
+unless shell
+  $stderr.puts "could not guess shell, aborting."
+  exit 1
+end
+
+unless config[shell]
+  $stderr.puts "unsupported shell '#{shell}'"
+  exit 1
+end
+
+histfile = ENV['HISTFILE']
+histfile ||= ENV['HOME'] + "/" + config[shell]
+
+unless histfile
+  $stderr.puts "could not read history file '#{histfile}'"
+  exit 1
+end
+
+command = ARGV.shift
+
+# read history - maybe there's a better way?
+history = File.read(histfile).split("\n")
+
+candidates = {}
+
+history.each do |elem|
+  next if elem.empty?
+  line = elem
+  if elem =~ /^:/ # zsh
+    time, line = elem.split(";")
+    next unless line
+    next if line.strip == command.strip
+  end
+  cmd, arg = line.split(" ", 2);
+  next if cmd.strip == command.strip
+  next if cmd.length <= 2 # most dangerous commands on unix have a length of 2. like mv, rm, cp, ...
+
+  min = command.length - 1
+  max = command.length + 1
+  next unless cmd.length == command.length or cmd.length == min or cmd.length == max
+
+  sim = cmd.similar(command)
+  sim -= 20 if cmd.length != command.length # hm..
+  next unless sim >= 60
+
+  candidates[sim] ||= []
+  next if candidates[sim].include? cmd
+
+  candidates[sim] << cmd
+end
+
+candidates = Hash[candidates.sort_by { |k, v| k.to_f }.reverse.uniq]
+
+while candidates.count > 0 do
+  candidate = candidates.shift
+  sim = candidate[0]
+  cands = candidate[1]
+
+  if cands.count == 1
+    begin
+      puts "Auto-guessed '#{cands[0]}', #{sim.round(2)}%"
+      slp = case sim
+        when 0..24 then 5
+        when 25..49 then 3
+        when 50..74 then 2
+        when 75..89 then 1
+        else 0
+      end
+      sleep slp
+      error = nil
+      begin
+        exec cands[0], *ARGV
+      rescue Exception => e
+        error = e
+      end
+
+      exit 0 unless error
+    rescue
+    end
+  elsif cands.count > 1
+    # abort here, do not iterate them all.
+    puts "Multiple candidates found:"
+    puts "  " + cands.join(", ")
+    exit 1
+  end
+end
+exit 1
