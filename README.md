@@ -29,6 +29,13 @@ Install from source:
 
 Or simply copy the ```bin/zimilar``` to anywhere you want. Please ensure to install its dependencies.
 
+
+## How it Works
+
+```zimilar``` parses your history file and compares the given command with all commands found in the history. It's using the [similar_text](https://github.com/seph/ruby-similar-text) gem to evaluate the matches.
+
+If ```zimilar``` finds a suitable match, it replaces your command and runs it.
+
 ## Usage
 
 Please be aware of that this is a nightly hack and might, under worst circumstances, destroy all you know and love. Please do not use it without having this read.
