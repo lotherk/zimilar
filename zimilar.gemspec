@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Zimilar::VERSION
   spec.authors       = ["Konrad Lother"]
   spec.email         = ["konrad@corpex.de"]
-  spec.summary       = %q{his small gem extends your shell to autocorrect inputs that would led in a 'command not found'.}
-  spec.description   = %q{his small gem extends your shell to autocorrect inputs that would led in a 'command not found'.}
+  spec.summary       = %q{This small gem extends your shell to autocorrect inputs that would led in a 'command not found'.}
+  spec.description   = %q{This small gem extends your shell to autocorrect inputs that would led in a 'command not found'.}
   spec.homepage      = "https://github.com/lotherk/zimilar"
   spec.license       = "MIT"
 
