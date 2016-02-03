@@ -29,35 +29,50 @@ end
 command = ARGV.shift
 
 # read history - maybe there's a better way?
-history = File.read(histfile).split("\n")
-
 candidates = {}
+line_counter = 0
+File.open(histfile, "r").each_line do |elem|
+  begin
+    line_counter += 1
+    next if elem.empty?
+    line = elem
+    if elem =~ /^:/ # zsh
+      time, line = elem.split(";")
+      next unless line
+      next if line.strip == command.strip
+    end
+    cmd, arg = line.split(" ", 2);
+    next if cmd.strip == command.strip
+    next if cmd.length <= 2 # most dangerous commands on unix have a length of 2. like mv, rm, cp, ...
 
-history.each do |elem|
-  next if elem.empty?
-  line = elem
-  if elem =~ /^:/ # zsh
-    time, line = elem.split(";")
-    next unless line
-    next if line.strip == command.strip
+    min = command.length - 1
+    max = command.length + 1
+    next unless cmd.length == command.length or cmd.length == min or cmd.length == max
+
+    sim = cmd.similar(command)
+    sim -= 20 if cmd.length != command.length # hm..
+    next unless sim >= 60
+
+    candidates[sim] ||= []
+    next if candidates[sim].include? cmd
+
+    candidates[sim] << cmd
+  rescue ArgumentError => ae
+    match = ae.message.match(%r{^invalid byte sequence in (.*)$})
+    if match
+     $stderr.puts "[zimilar] Couldn't parse history at line #{line_counter} due to encoding problems."
+     $stderr.puts elem
+     puts ""
+    else
+      raise
+    end
+  rescue
+    raise
   end
-  cmd, arg = line.split(" ", 2);
-  next if cmd.strip == command.strip
-  next if cmd.length <= 2 # most dangerous commands on unix have a length of 2. like mv, rm, cp, ...
-
-  min = command.length - 1
-  max = command.length + 1
-  next unless cmd.length == command.length or cmd.length == min or cmd.length == max
-
-  sim = cmd.similar(command)
-  sim -= 20 if cmd.length != command.length # hm..
-  next unless sim >= 60
-
-  candidates[sim] ||= []
-  next if candidates[sim].include? cmd
-
-  candidates[sim] << cmd
 end
+
+
+
 
 candidates = Hash[candidates.sort_by { |k, v| k.to_f }.reverse.uniq]
 
