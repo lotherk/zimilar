@@ -42,6 +42,7 @@ File.open(histfile, "r").each_line do |elem|
       next if line.strip == command.strip
     end
     cmd, arg = line.split(" ", 2);
+    next unless cmd
     next if cmd.strip == command.strip
     next if cmd.length <= 2 # most dangerous commands on unix have a length of 2. like mv, rm, cp, ...
 

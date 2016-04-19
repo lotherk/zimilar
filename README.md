@@ -16,6 +16,8 @@ The following shells are supported by now:
 
 ## Installation
 
+Requires ruby development headers to be installed. ruby-dev on Debian based systems.
+
 Install it yourself as:
 
     $ gem install zimilar
